@@ -1,0 +1,19 @@
+name: review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+
+      - name: build-image
+        run: |
+          export PROJECT_VERSION=$(cat version.txt)
+          docker build -t ${GITHUB_REPOSITORY}:${PROJECT_VERSION} -t ${GITHUB_REPOSITORY}:latest .
