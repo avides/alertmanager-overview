@@ -25,12 +25,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          export PROJECT_NAME=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 2)
+          export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
           export GITHUB_PULL_REQUEST=$(cut -d / -f 3 <(echo ${GITHUB_REF}))
           sonar-scanner \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.projectName=${PROJECT_NAME} \
-            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//:} \
+            -Dsonar.organization=${SONAR_ORGANIZATION} \
+            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//_} \
             -Dsonar.pullrequest.key=${GITHUB_PULL_REQUEST} \
             -Dsonar.pullrequest.branch=${GITHUB_REF}

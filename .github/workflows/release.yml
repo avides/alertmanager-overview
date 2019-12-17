@@ -29,9 +29,9 @@ jobs:
 
       - name: sonar
         run: |
+          export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
           sonar-scanner \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.projectName=${PROJECT_NAME} \
-            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//:} \
-            -Dsonar.projectVersion=${PROJECT_VERSION}
+            -Dsonar.organization=${SONAR_ORGANIZATION} \
+            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//_}
