@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Alertmanager-Overview</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="alertmanager-overview.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script type="text/javascript" src="alertmanager-overview.js"></script>
+  <script type="text/javascript" src="favicon.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <h1 class="dark-theme-title">Alerts</h1>
+    <h2 class="dark-theme-title">Production</h2>
+    <alerts url="{{PRODUCTION_URL}}"></alerts>
+    <h2 class="dark-theme-title">Test</h2>
+    <alerts url="{{TEST_URL}}"></alerts>
+  </div>
+</body>
+
+</html>

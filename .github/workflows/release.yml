@@ -1,0 +1,26 @@
+name: release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+
+      - name: push-image
+        run: |
+          export PROJECT_NAME=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 2)
+          export PROJECT_VERSION=$(cat version.txt)
+          docker login -u ${{ secrets.DOCKER_REGISTRY_USER }} -p ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          docker build -t ${GITHUB_REPOSITORY}:${PROJECT_VERSION} -t ${GITHUB_REPOSITORY}:latest .
+          docker push ${GITHUB_REPOSITORY}:${PROJECT_VERSION}
+          docker push ${GITHUB_REPOSITORY}:latest
