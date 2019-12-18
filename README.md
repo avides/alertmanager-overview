@@ -1,5 +1,6 @@
 # alertmanager-overview
 [![Docker Pulls](https://img.shields.io/docker/pulls/avides/alertmanager-overview.svg)](https://hub.docker.com/r/avides/alertmanager-overview)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=avides_alertmanager-overview&metric=alert_status)](https://sonarcloud.io/dashboard?id=avides_alertmanager-overview)
 
 Alertmanager-Overview is a simple [Alertmanager](https://prometheus.io/docs/alerting/alertmanager/) overview page which lists all active alerts with auto refresh. It will also display different styles for active (with background color red) and silenced (with background color grey) alerts.
 
