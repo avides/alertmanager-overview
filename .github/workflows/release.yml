@@ -21,7 +21,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GPR_TOKEN }}
-          fetch-depth: ''
+          fetch-depth: ""
 
       # Execute some necessary git commands to get more repository informations
       - name: post-checkout
@@ -52,7 +52,7 @@ jobs:
       - name: setup-sonar
         uses: warchant/setup-sonar-scanner@v3
 
-       # Execute sonar analysis for current branch
+        # Execute sonar analysis for current branch
       - name: sonar-analyse
         env:
           SONAR_HOST: ${{ secrets.OS_SONAR_HOST_URL }}
@@ -60,7 +60,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
-          mvn sonar:sonar \
+          sonar-scanner \
             -Dsonar.host.url=${SONAR_HOST} \
             -Dsonar.login=${SONAR_TOKEN} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \

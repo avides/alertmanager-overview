@@ -76,7 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
-          mvn sonar:sonar \
+          sonar-scanner \
             -Dsonar.host.url=${SONAR_HOST} \
             -Dsonar.login=${SONAR_TOKEN} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \
