@@ -1,37 +1,71 @@
+# This configuration is used for the deployment and publish to GitHub Packages
 name: release
 
 on:
   push:
     branches:
+      # Runs only on push to the master branch
       - master
 
 jobs:
-  build:
+  release:
     timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the git repository
       - name: checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GPR_TOKEN }}
+          fetch-depth: ""
 
+      # Execute some necessary git commands to get more repository informations
+      - name: post-checkout
+        run: git fetch --prune --unshallow
+
+      # Get currency project version from version.txt
+      - name: get-project-version
+        id: get_project_version
+        uses: avides/actions-project-version-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file-to-check: version.txt
+          only-return-version: true
+
+      # Build and publish docker image
       - name: push-image
+        env:
+          PROJECT_VERSION: ${{ steps.get_project_version.outputs.version }}
         run: |
-          export PROJECT_VERSION=$(cat version.txt)
           docker login ${{ secrets.DOCKER_REGISTRY }} -u ${{ secrets.DOCKER_REGISTRY_USER }} -p ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           docker build -t ${{ secrets.DOCKER_REGISTRY }}/${GITHUB_REPOSITORY}:${PROJECT_VERSION} -t ${{ secrets.DOCKER_REGISTRY }}/${GITHUB_REPOSITORY}:latest .
           docker push ${{ secrets.DOCKER_REGISTRY }}/${GITHUB_REPOSITORY}:${PROJECT_VERSION}
-          docker push ${{ secrets.DOCKER_REGISTRY }}/${GITHUB_REPOSITORY}:latest
+          if [[ "$PROJECT_VERSION" != *"SNAPSHOT"* || "$PROJECT_VERSION" != *"RC"* ]]; then
+            docker push ${{ secrets.DOCKER_REGISTRY }}/${GITHUB_REPOSITORY}:latest
+          fi
 
+      # Setup the sonar analyse scanner
       - name: setup-sonar
-        uses: warchant/setup-sonar-scanner@v1
+        uses: warchant/setup-sonar-scanner@v3
 
-      - name: sonar
+        # Execute sonar analysis for current branch
+      - name: sonar-analyse
+        env:
+          SONAR_HOST: ${{ secrets.OS_SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.OS_SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
           sonar-scanner \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.host.url=${SONAR_HOST} \
+            -Dsonar.login=${SONAR_TOKEN} \
             -Dsonar.organization=${SONAR_ORGANIZATION} \
-            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//_}
+            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//_} \
+            -Dsonar.pullrequest.key=${{ github.event.number }} \
+            -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
+            -Dsonar.pullrequest.github.repository=${GITHUB_REPOSITORY} \
+            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
