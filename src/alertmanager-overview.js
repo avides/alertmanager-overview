@@ -29,12 +29,14 @@ window.onload = function () {
         var self = this;
 
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', this.url + "/api/v1/alerts", true);
+        xhr.open('GET', this.url + "/api/v2/alerts", true);
         xhr.onreadystatechange = function () {
           if (xhr.readyState == 4) {
             if (xhr.status == 200) {
-              var alerts = JSON.parse(xhr.responseText);
-              alerts.data.sort(function (x, y) {
+              // The v2 API returns the alerts array directly (no enclosing
+              // {status, data} envelope like the removed v1 API had).
+              var data = JSON.parse(xhr.responseText);
+              data.sort(function (x, y) {
                 if (x.status.state == y.status.state) {
                   return 0;
                 }
@@ -43,8 +45,8 @@ window.onload = function () {
                 }
                 return 1;
               });
-              self.dispatchAlertsMetric(self.url, alerts.data);
-              self.alerts = alerts;
+              self.dispatchAlertsMetric(self.url, data);
+              self.alerts = { data: data };
             }
           }
         };
