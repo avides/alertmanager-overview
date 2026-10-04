@@ -9,25 +9,20 @@ on:
 jobs:
   nightly:
     timeout-minutes: 30
+    
     runs-on: ubuntu-latest
 
     steps:
       # Checkout the git repository
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GPR_TOKEN }}
-          fetch-depth: ""
+          fetch-depth: 0
 
-      # Execute some necessary git commands to get more repository informations
-      - name: post-checkout
-        run: git fetch --prune --unshallow
-
-      # Get currency project version
+      # Get the current project version from version.txt
       - name: get-project-version
         id: get_project_version
-        uses: avides/actions-project-version-check@v1
+        uses: avides/actions-project-version-check@fdcc0b518640acac421d60de17201bb2bbb80a77 # v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           file-to-check: version.txt
@@ -42,22 +37,16 @@ jobs:
 
       # Setup the sonar analyse scanner
       - name: setup-sonar
-        uses: warchant/setup-sonar-scanner@v3
+        uses: warchant/setup-sonar-scanner@911ef81b14b267a261d70ac94e43d3c822a709d5 # v10
 
-        # Execute sonar analysis for current branch
-      - name: sonar-analyse
+      # Execute sonar analysis and publish results to the sonarqube server
+      - name: sonar
         env:
-          SONAR_HOST: ${{ secrets.OS_SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.OS_SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_VERSION: ${{ steps.get_project_version.outputs.version }}
         run: |
-          export SONAR_ORGANIZATION=$(echo ${GITHUB_REPOSITORY} | cut -d / -f 1)
           sonar-scanner \
-            -Dsonar.host.url=${SONAR_HOST} \
-            -Dsonar.login=${SONAR_TOKEN} \
-            -Dsonar.organization=${SONAR_ORGANIZATION} \
-            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//_} \
-            -Dsonar.pullrequest.key=${{ github.event.number }} \
-            -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
-            -Dsonar.pullrequest.github.repository=${GITHUB_REPOSITORY} \
-            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.projectKey=${GITHUB_REPOSITORY//\//:} \
+            -Dsonar.projectVersion=${PROJECT_VERSION} \
+            -Dsonar.branch.name=master
