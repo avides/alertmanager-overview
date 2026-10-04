@@ -23,7 +23,7 @@ jobs:
       # Get the current project version from version.txt
       - name: get-project-version
         id: get_project_version
-        uses: avides/actions-project-version-check@fdcc0b518640acac421d60de17201bb2bbb80a77 # v3
+        uses: avides/actions-project-version-check@71f4eaf8ae9ef4e2dd7f3d42402b252172943565 # v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           file-to-check: version.txt

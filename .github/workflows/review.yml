@@ -27,7 +27,7 @@ jobs:
 
       # Update GitHub Action configuration if necessary
       - name: action-configuration-autoupdate
-        uses: avides/actions-action-configuration-autoupdate@f3e281a9e98fafd1a52b26d388be82bdaff68126 # v3
+        uses: avides/actions-action-configuration-autoupdate@eabb2bceabf22ff2e7490471bdab4b98d2a3286f # v3
         with:
           token: ${{ secrets.GPR_TOKEN }}
           actions-configuration-files: plain-docker-application/nightly.yml,plain-docker-application/release.yml,plain-docker-application/review.yml
@@ -45,7 +45,7 @@ jobs:
       # Verify project version is updated
       - name: project-version-check
         id: project_version_check
-        uses: avides/actions-project-version-check@fdcc0b518640acac421d60de17201bb2bbb80a77 # v3
+        uses: avides/actions-project-version-check@71f4eaf8ae9ef4e2dd7f3d42402b252172943565 # v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           file-to-check: version.txt
