@@ -43,10 +43,14 @@ describe('silenceUrl', () => {
 });
 
 describe('prometheusUrl', () => {
-  it('uses the generator url of the alert', () => {
-    const url = 'http://prometheus.example.com/graph?g0.expr=up';
+  it('opens the graph tab of the generator url', () => {
+    const generatorURL = 'http://prometheus.example.com/graph?g0.expr=up%7Bjob%3D%22node%22%7D&g0.tab=1';
 
-    expect(prometheusUrl(alert({ generatorURL: url }))).toBe(url);
+    const url = new URL(prometheusUrl(alert({ generatorURL }))!);
+
+    expect(url.origin + url.pathname).toBe('http://prometheus.example.com/graph');
+    expect(url.searchParams.get('g0.expr')).toBe('up{job="node"}');
+    expect(url.searchParams.get('g0.tab')).toBe('0');
   });
 
   it('ignores missing and non http urls', () => {

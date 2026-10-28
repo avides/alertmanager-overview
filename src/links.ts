@@ -27,5 +27,11 @@ export function silenceUrl(alertmanagerUrl: string, alert: Alert): string | unde
 
 // The graph of the alert rule in Prometheus, only http(s) links are used
 export function prometheusUrl(alert: Alert): string | undefined {
-  return /^https?:\/\//.test(alert.generatorURL ?? '') ? alert.generatorURL : undefined;
+  if (!/^https?:\/\//.test(alert.generatorURL ?? '')) {
+    return undefined;
+  }
+  const url = new URL(alert.generatorURL!);
+  // Prometheus links to the table, 0 opens the graph tab (old and new Prometheus UI)
+  url.searchParams.set('g0.tab', '0');
+  return url.toString();
 }
