@@ -67,9 +67,10 @@ onBeforeUnmount(() => window.clearInterval(timer));
       <div :class="alert.status.state">
         <LevelIcon :level="alertLevel(alert)" :description="alert.annotations.description" />
         <span class="summary">{{ alert.annotations.summary }}</span>
-        <span v-if="silence" class="meta" :title="silence.comment">
-          until {{ formatTime(new Date(silence.endsAt), now) }} · {{ silence.createdBy }}
+        <span class="meta silence-end" :title="silence?.comment">
+          <template v-if="silence">until {{ formatTime(new Date(silence.endsAt), now) }}</template>
         </span>
+        <span class="meta silence-creator" :title="silence?.comment">{{ silence?.createdBy }}</span>
         <span class="meta duration" :title="`Since ${new Date(alert.startsAt).toLocaleString()}`">
           {{ formatDuration(now.getTime() - Date.parse(alert.startsAt)) }}
         </span>

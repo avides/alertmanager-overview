@@ -1,6 +1,6 @@
 body {
     background-color: black;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
 }
 
 .dark-theme-title {
@@ -20,6 +20,9 @@ li.alert > div {
     border-width: 1px;
     border-color: grey;
     padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 li.alert > div.no-alert {
@@ -40,12 +43,6 @@ li.alert > div.suppressed {
 li.alert > div.unreachable {
     color: black;
     background-color: #FFA500;
-}
-
-li.alert > div {
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .level-icon {
@@ -83,4 +80,15 @@ a.action:hover {
 .meta.duration {
     min-width: 4.5em;
     text-align: right;
+}
+
+/* Fixed columns, so the silence details start at the same position regardless of their length */
+.meta.silence-end {
+    width: 12em;
+}
+
+.meta.silence-creator {
+    width: 8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

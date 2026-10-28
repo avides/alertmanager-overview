@@ -11,7 +11,7 @@ export async function loadConfig(): Promise<Config> {
   }
   const config = (await response.json()) as Partial<Config>;
   if (typeof config.productionUrl !== 'string' || typeof config.testUrl !== 'string') {
-    throw new Error('config.json must contain productionUrl and testUrl');
+    throw new TypeError('config.json must contain productionUrl and testUrl');
   }
   return { productionUrl: config.productionUrl, testUrl: config.testUrl };
 }

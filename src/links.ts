@@ -3,11 +3,15 @@ import type { Alert } from './alerts';
 const PROMETHEUS_GRAPH_RANGE = '6h';
 
 function baseUrl(alertmanagerUrl: string): string {
-  return alertmanagerUrl.replace(/\/+$/, '');
+  let url = alertmanagerUrl;
+  while (url.endsWith('/')) {
+    url = url.slice(0, -1);
+  }
+  return url;
 }
 
 function escapeLabelValue(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  return value.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`).replaceAll('\n', String.raw`\n`);
 }
 
 // Matchers in the notation of the Alertmanager UI, e.g. {alertname="HostDown",instance="host01"}
