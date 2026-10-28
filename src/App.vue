@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
-import type { AlertCounts } from './alerts';
+import { type AlertCounts, NO_ALERTS } from './alerts';
 import AlertList from './components/AlertList.vue';
 import { updateFavicon } from './favicon';
 
@@ -10,8 +10,8 @@ defineProps<{
 }>();
 
 const counts = reactive({
-  production: { active: 0, suppressed: 0 } as AlertCounts,
-  test: { active: 0, suppressed: 0 } as AlertCounts
+  production: NO_ALERTS as AlertCounts,
+  test: NO_ALERTS as AlertCounts
 });
 
 watch(counts, () => updateFavicon([counts.production, counts.test]), { immediate: true });

@@ -8,14 +8,18 @@ export interface Alert {
   fingerprint: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
+  generatorURL?: string;
   status: {
     state: AlertState;
+    silencedBy: string[];
   };
 }
 
 export interface AlertCounts {
   active: number;
   suppressed: number;
+  activeFatal: number;
+  activeError: number;
 }
 
 export async function fetchAlerts(url: string): Promise<Alert[]> {
@@ -47,8 +51,13 @@ export function alertLevel(alert: Alert): AlertLevel | undefined {
 }
 
 export function countAlerts(alerts: Alert[]): AlertCounts {
+  const active = alerts.filter(alert => alert.status.state === 'active');
   return {
-    active: alerts.filter(alert => alert.status.state === 'active').length,
-    suppressed: alerts.filter(alert => alert.status.state === 'suppressed').length
+    active: active.length,
+    suppressed: alerts.filter(alert => alert.status.state === 'suppressed').length,
+    activeFatal: active.filter(alert => alertLevel(alert) === 'fatal').length,
+    activeError: active.filter(alert => alertLevel(alert) === 'error').length
   };
 }
+
+export const NO_ALERTS: AlertCounts = { active: 0, suppressed: 0, activeFatal: 0, activeError: 0 };

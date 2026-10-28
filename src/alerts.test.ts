@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Alert, type AlertState, alertLevel, countAlerts, fetchAlerts, sortAlerts } from './alerts';
 
 function alert(fingerprint: string, state: AlertState, summary = fingerprint): Alert {
-  return { fingerprint, labels: {}, annotations: { summary }, status: { state } };
+  return { fingerprint, labels: {}, annotations: { summary }, status: { state, silencedBy: [] } };
 }
 
 describe('sortAlerts', () => {
@@ -37,7 +37,7 @@ describe('sortAlerts', () => {
   });
 
   it('sorts alerts without summary first', () => {
-    const withoutSummary: Alert = { fingerprint: 'n1', labels: {}, annotations: {}, status: { state: 'suppressed' } };
+    const withoutSummary: Alert = { fingerprint: 'n1', labels: {}, annotations: {}, status: { state: 'suppressed', silencedBy: [] } };
 
     const sorted = sortAlerts([alert('s1', 'suppressed', 'Disk full'), withoutSummary]);
 
@@ -65,15 +65,20 @@ describe('alertLevel', () => {
 });
 
 describe('countAlerts', () => {
-  it('counts active and suppressed alerts', () => {
+  it('counts active and suppressed alerts and the active fatal and error alerts', () => {
+    const withLevel = (fingerprint: string, state: AlertState, level: string): Alert =>
+      ({ ...alert(fingerprint, state), labels: { level } });
+
     const counts = countAlerts([
-      alert('a1', 'active'),
-      alert('a2', 'active'),
-      alert('s1', 'suppressed'),
+      withLevel('a1', 'active', 'fatal'),
+      withLevel('a2', 'active', 'error'),
+      withLevel('a3', 'active', 'error'),
+      withLevel('a4', 'active', 'warn'),
+      withLevel('s1', 'suppressed', 'fatal'),
       alert('u1', 'unprocessed')
     ]);
 
-    expect(counts).toEqual({ active: 2, suppressed: 1 });
+    expect(counts).toEqual({ active: 4, suppressed: 1, activeFatal: 1, activeError: 2 });
   });
 });
 

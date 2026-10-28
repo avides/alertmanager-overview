@@ -52,3 +52,23 @@ li.alert > div {
     flex-shrink: 0;
     cursor: help;
 }
+
+li.alert > div > .summary {
+    flex-grow: 1;
+}
+
+a.action, span.action {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    padding: 2px;
+    border-radius: 3px;
+    color: inherit;
+    opacity: 0.75;
+}
+
+a.action:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.3);
+}

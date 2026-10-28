@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { type Alert, type AlertCounts, alertLevel, countAlerts, fetchAlerts, sortAlerts } from '../alerts';
+import { newSilenceUrl, prometheusUrl, silenceUrl } from '../links';
 import LevelIcon from './LevelIcon.vue';
 
 const props = withDefaults(defineProps<{
@@ -48,7 +49,29 @@ onBeforeUnmount(() => window.clearInterval(timer));
     <li v-for="alert in alerts" :key="alert.fingerprint" class="alert">
       <div :class="alert.status.state">
         <LevelIcon :level="alertLevel(alert)" :description="alert.annotations.description" />
-        <span>{{ alert.annotations.summary }}</span>
+        <span class="summary">{{ alert.annotations.summary }}</span>
+        <a v-if="alert.status.state === 'active'" class="action" :href="newSilenceUrl(url, alert)"
+          target="_blank" rel="noopener" title="Create silence">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M8 1.5a4 4 0 0 0-4 4v3L2.5 11h11L12 8.5v-3a4 4 0 0 0-4-4zM6.5 12.5a1.5 1.5 0 0 0 3 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+        </a>
+        <a v-else-if="silenceUrl(url, alert)" class="action" :href="silenceUrl(url, alert)"
+          target="_blank" rel="noopener" title="Show silence">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M8 1.5a4 4 0 0 0-4 4v3L2.5 11h11L12 8.5v-3a4 4 0 0 0-4-4zM6.5 12.5a1.5 1.5 0 0 0 3 0" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+        </a>
+        <span v-else class="action" />
+        <a v-if="prometheusUrl(alert)" class="action" :href="prometheusUrl(alert)"
+          target="_blank" rel="noopener" title="Show in Prometheus">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path d="M1.5 14.5h13M2.5 11l3.5-4 3 2.5 4.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+        <span v-else class="action" />
       </div>
     </li>
   </ul>
