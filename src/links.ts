@@ -1,5 +1,7 @@
 import type { Alert } from './alerts';
 
+const PROMETHEUS_GRAPH_RANGE = '6h';
+
 function baseUrl(alertmanagerUrl: string): string {
   return alertmanagerUrl.replace(/\/+$/, '');
 }
@@ -33,5 +35,6 @@ export function prometheusUrl(alert: Alert): string | undefined {
   const url = new URL(alert.generatorURL!);
   // Prometheus links to the table, 0 opens the graph tab (old and new Prometheus UI)
   url.searchParams.set('g0.tab', '0');
+  url.searchParams.set('g0.range_input', PROMETHEUS_GRAPH_RANGE);
   return url.toString();
 }

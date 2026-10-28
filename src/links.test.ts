@@ -51,6 +51,7 @@ describe('prometheusUrl', () => {
     expect(url.origin + url.pathname).toBe('http://prometheus.example.com/graph');
     expect(url.searchParams.get('g0.expr')).toBe('up{job="node"}');
     expect(url.searchParams.get('g0.tab')).toBe('0');
+    expect(url.searchParams.get('g0.range_input')).toBe('6h');
   });
 
   it('ignores missing and non http urls', () => {
