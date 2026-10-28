@@ -1,13 +1,23 @@
-FROM nginx:1.15-alpine
+# The build result is static files, so the build stage always runs on the platform of the build host
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+COPY . .
+RUN npm test && npm run build
+
+
+FROM nginx:1.30-alpine
 
 EXPOSE 80
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
-COPY src/*.html /usr/share/nginx/html/
-COPY src/*.css /usr/share/nginx/html/
-COPY src/*.js /usr/share/nginx/html/
+# Writes config.json with the environment variables PRODUCTION_URL and TEST_URL on start
+COPY docker/config.json.template /etc/alertmanager-overview/config.json.template
+COPY --chmod=755 docker/40-config-json.sh /docker-entrypoint.d/40-config-json.sh
 
-COPY docker/entrypoint.sh /
-RUN chmod +x entrypoint.sh
-CMD ["/entrypoint.sh"]
+COPY --from=build /app/dist /usr/share/nginx/html

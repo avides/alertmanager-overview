@@ -1,0 +1,104 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type Alert, type AlertState, alertLevel, countAlerts, fetchAlerts, sortAlerts } from './alerts';
+
+function alert(fingerprint: string, state: AlertState, summary = fingerprint): Alert {
+  return { fingerprint, labels: {}, annotations: { summary }, startsAt: '2026-10-28T10:00:00Z', status: { state, silencedBy: [] } };
+}
+
+describe('sortAlerts', () => {
+  it('puts active alerts first and sorts alphabetically by summary', () => {
+    const sorted = sortAlerts([
+      alert('s1', 'suppressed', 'Disk full'),
+      alert('a1', 'active', 'Queue too slow'),
+      alert('u1', 'unprocessed', 'CPU high'),
+      alert('a2', 'active', 'Host down'),
+      alert('s2', 'suppressed', 'Backup failed')
+    ]);
+
+    expect(sorted.map(a => a.fingerprint)).toEqual(['a2', 'a1', 's2', 'u1', 's1']);
+  });
+
+  it('sorts by level from fatal to info before the summary, unknown levels last', () => {
+    const withLevel = (fingerprint: string, state: AlertState, level: string): Alert =>
+      ({ ...alert(fingerprint, state, 'Same summary'), labels: { level } });
+
+    const sorted = sortAlerts([
+      withLevel('s-info', 'suppressed', 'info'),
+      withLevel('a-unknown', 'active', 'critical'),
+      withLevel('a-warn', 'active', 'warn'),
+      withLevel('s-fatal', 'suppressed', 'fatal'),
+      withLevel('a-fatal', 'active', 'fatal'),
+      withLevel('a-error', 'active', 'error'),
+      withLevel('a-info', 'active', 'info')
+    ]);
+
+    expect(sorted.map(a => a.fingerprint))
+      .toEqual(['a-fatal', 'a-error', 'a-warn', 'a-info', 'a-unknown', 's-fatal', 's-info']);
+  });
+
+  it('sorts alerts without summary first', () => {
+    const withoutSummary: Alert = { ...alert('n1', 'suppressed'), annotations: {} };
+
+    const sorted = sortAlerts([alert('s1', 'suppressed', 'Disk full'), withoutSummary]);
+
+    expect(sorted.map(a => a.fingerprint)).toEqual(['n1', 's1']);
+  });
+
+  it('does not modify the given array', () => {
+    const alerts = [alert('s1', 'suppressed'), alert('a1', 'active')];
+
+    sortAlerts(alerts);
+
+    expect(alerts.map(a => a.fingerprint)).toEqual(['s1', 'a1']);
+  });
+});
+
+describe('alertLevel', () => {
+  it('reads the level from the label', () => {
+    expect(alertLevel({ ...alert('a1', 'active'), labels: { level: 'fatal' } })).toBe('fatal');
+  });
+
+  it('ignores missing and unknown levels', () => {
+    expect(alertLevel(alert('a1', 'active'))).toBeUndefined();
+    expect(alertLevel({ ...alert('a1', 'active'), labels: { level: 'critical' } })).toBeUndefined();
+  });
+});
+
+describe('countAlerts', () => {
+  it('counts active and suppressed alerts and the active fatal and error alerts', () => {
+    const withLevel = (fingerprint: string, state: AlertState, level: string): Alert =>
+      ({ ...alert(fingerprint, state), labels: { level } });
+
+    const counts = countAlerts([
+      withLevel('a1', 'active', 'fatal'),
+      withLevel('a2', 'active', 'error'),
+      withLevel('a3', 'active', 'error'),
+      withLevel('a4', 'active', 'warn'),
+      withLevel('s1', 'suppressed', 'fatal'),
+      alert('u1', 'unprocessed')
+    ]);
+
+    expect(counts).toEqual({ active: 4, suppressed: 1, activeFatal: 1, activeError: 2, unreachable: false });
+  });
+});
+
+describe('fetchAlerts', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('loads the alerts from the v2 api', async () => {
+    const alerts = [alert('a1', 'active')];
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(alerts)));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchAlerts('http://alertmanager.example.com', 1000)).resolves.toEqual(alerts);
+    expect(fetchMock).toHaveBeenCalledWith('http://alertmanager.example.com/api/v2/alerts', { signal: expect.any(AbortSignal) });
+  });
+
+  it('fails on an http error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })));
+
+    await expect(fetchAlerts('http://alertmanager.example.com', 1000)).rejects.toThrow('HTTP 503');
+  });
+});
