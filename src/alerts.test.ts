@@ -1,20 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Alert, type AlertState, countAlerts, fetchAlerts, sortAlerts } from './alerts';
 
-function alert(fingerprint: string, state: AlertState): Alert {
-  return { fingerprint, annotations: { summary: fingerprint }, status: { state } };
+function alert(fingerprint: string, state: AlertState, summary = fingerprint): Alert {
+  return { fingerprint, annotations: { summary }, status: { state } };
 }
 
 describe('sortAlerts', () => {
-  it('puts active alerts first and keeps the order within a state', () => {
+  it('puts active alerts first and sorts alphabetically by summary', () => {
     const sorted = sortAlerts([
-      alert('s1', 'suppressed'),
-      alert('a1', 'active'),
-      alert('u1', 'unprocessed'),
-      alert('a2', 'active')
+      alert('s1', 'suppressed', 'Disk full'),
+      alert('a1', 'active', 'Queue too slow'),
+      alert('u1', 'unprocessed', 'CPU high'),
+      alert('a2', 'active', 'Host down'),
+      alert('s2', 'suppressed', 'Backup failed')
     ]);
 
-    expect(sorted.map(a => a.fingerprint)).toEqual(['a1', 'a2', 's1', 'u1']);
+    expect(sorted.map(a => a.fingerprint)).toEqual(['a2', 'a1', 's2', 'u1', 's1']);
+  });
+
+  it('sorts alerts without summary first', () => {
+    const withoutSummary: Alert = { fingerprint: 'n1', annotations: {}, status: { state: 'suppressed' } };
+
+    const sorted = sortAlerts([alert('s1', 'suppressed', 'Disk full'), withoutSummary]);
+
+    expect(sorted.map(a => a.fingerprint)).toEqual(['n1', 's1']);
   });
 
   it('does not modify the given array', () => {

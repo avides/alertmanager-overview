@@ -21,9 +21,11 @@ export async function fetchAlerts(url: string): Promise<Alert[]> {
   return (await response.json()) as Alert[];
 }
 
-// Active alerts first, the order within a state is kept
+// Active alerts first, then alphabetically by summary
 export function sortAlerts(alerts: Alert[]): Alert[] {
-  return [...alerts].sort((x, y) => Number(y.status.state === 'active') - Number(x.status.state === 'active'));
+  return [...alerts].sort((x, y) =>
+    Number(y.status.state === 'active') - Number(x.status.state === 'active')
+    || (x.annotations.summary ?? '').localeCompare(y.annotations.summary ?? ''));
 }
 
 export function countAlerts(alerts: Alert[]): AlertCounts {
