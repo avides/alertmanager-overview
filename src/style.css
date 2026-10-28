@@ -41,3 +41,14 @@ li.alert > div.unreachable {
     color: black;
     background-color: #FFA500;
 }
+
+li.alert > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.level-icon {
+    flex-shrink: 0;
+    cursor: help;
+}

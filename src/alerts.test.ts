@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { type Alert, type AlertState, countAlerts, fetchAlerts, sortAlerts } from './alerts';
+import { type Alert, type AlertState, alertLevel, countAlerts, fetchAlerts, sortAlerts } from './alerts';
 
 function alert(fingerprint: string, state: AlertState, summary = fingerprint): Alert {
-  return { fingerprint, annotations: { summary }, status: { state } };
+  return { fingerprint, labels: {}, annotations: { summary }, status: { state } };
 }
 
 describe('sortAlerts', () => {
@@ -19,7 +19,7 @@ describe('sortAlerts', () => {
   });
 
   it('sorts alerts without summary first', () => {
-    const withoutSummary: Alert = { fingerprint: 'n1', annotations: {}, status: { state: 'suppressed' } };
+    const withoutSummary: Alert = { fingerprint: 'n1', labels: {}, annotations: {}, status: { state: 'suppressed' } };
 
     const sorted = sortAlerts([alert('s1', 'suppressed', 'Disk full'), withoutSummary]);
 
@@ -32,6 +32,17 @@ describe('sortAlerts', () => {
     sortAlerts(alerts);
 
     expect(alerts.map(a => a.fingerprint)).toEqual(['s1', 'a1']);
+  });
+});
+
+describe('alertLevel', () => {
+  it('reads the level from the label', () => {
+    expect(alertLevel({ ...alert('a1', 'active'), labels: { level: 'fatal' } })).toBe('fatal');
+  });
+
+  it('ignores missing and unknown levels', () => {
+    expect(alertLevel(alert('a1', 'active'))).toBeUndefined();
+    expect(alertLevel({ ...alert('a1', 'active'), labels: { level: 'critical' } })).toBeUndefined();
   });
 });
 

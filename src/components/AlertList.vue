@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { type Alert, type AlertCounts, countAlerts, fetchAlerts, sortAlerts } from '../alerts';
+import { type Alert, type AlertCounts, alertLevel, countAlerts, fetchAlerts, sortAlerts } from '../alerts';
+import LevelIcon from './LevelIcon.vue';
 
 const props = withDefaults(defineProps<{
   url: string;
@@ -45,7 +46,10 @@ onBeforeUnmount(() => window.clearInterval(timer));
       <div class="no-alert"><span>No alerts</span></div>
     </li>
     <li v-for="alert in alerts" :key="alert.fingerprint" class="alert">
-      <div :class="alert.status.state"><span>{{ alert.annotations.summary }}</span></div>
+      <div :class="alert.status.state">
+        <LevelIcon :level="alertLevel(alert)" :description="alert.annotations.description" />
+        <span>{{ alert.annotations.summary }}</span>
+      </div>
     </li>
   </ul>
 </template>

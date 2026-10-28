@@ -1,7 +1,12 @@
 export type AlertState = 'unprocessed' | 'active' | 'suppressed';
 
+export type AlertLevel = 'fatal' | 'error' | 'warn' | 'info';
+
+const ALERT_LEVELS: readonly string[] = ['fatal', 'error', 'warn', 'info'];
+
 export interface Alert {
   fingerprint: string;
+  labels: Record<string, string>;
   annotations: Record<string, string>;
   status: {
     state: AlertState;
@@ -26,6 +31,12 @@ export function sortAlerts(alerts: Alert[]): Alert[] {
   return [...alerts].sort((x, y) =>
     Number(y.status.state === 'active') - Number(x.status.state === 'active')
     || (x.annotations.summary ?? '').localeCompare(y.annotations.summary ?? ''));
+}
+
+// The level is set by the label "level" of the Prometheus alert rules
+export function alertLevel(alert: Alert): AlertLevel | undefined {
+  const level = alert.labels.level;
+  return ALERT_LEVELS.includes(level) ? (level as AlertLevel) : undefined;
 }
 
 export function countAlerts(alerts: Alert[]): AlertCounts {
