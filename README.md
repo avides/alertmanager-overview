@@ -2,9 +2,9 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/avides/alertmanager-overview.svg)](https://hub.docker.com/r/avides/alertmanager-overview)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=avides_alertmanager-overview&metric=alert_status)](https://sonarcloud.io/dashboard?id=avides_alertmanager-overview)
 
-Alertmanager-Overview is a simple [Alertmanager](https://prometheus.io/docs/alerting/alertmanager/) overview page which lists all active alerts with auto refresh. It will also display different styles for active (with background color red) and silenced (with background color grey) alerts.
+Alertmanager-Overview is a simple [Alertmanager](https://prometheus.io/docs/alerting/alertmanager/) overview page which lists all active alerts with auto refresh. It will also display different styles for active (with background color red) and silenced (with background color grey) alerts. An Alertmanager that cannot be reached is shown with background color orange.
 
-The current version of Alertmanager-Overview is designed for two Alertmanagers running: one for production environment and one for test environment. The URLs are set by the environment variables `PRODUCTION_URL` and `TEST_URL`. Allowed URLs may not contain the symbol `;`.
+The current version of Alertmanager-Overview is designed for two Alertmanagers running: one for production environment and one for test environment. The URLs are set by the environment variables `PRODUCTION_URL` and `TEST_URL`. The URLs may not contain quotes (`"` or `'`). The Alertmanagers must allow cross-origin requests (Alertmanager does this by default).
 
 ## Requirements
 
@@ -27,7 +27,7 @@ avides/alertmanager-overview:latest
 
 ### Build & Test
 
-The following commands are useful if you want to run the code locally.
+The application is written in TypeScript with Vue 3 and built with Vite. The Docker build runs the tests and the build, so only Docker is needed:
 
 ```
 docker build -t alertmanager-overview-dev .
@@ -43,4 +43,12 @@ alertmanager-overview-dev
 docker logs -f alertmanager-overview
 
 docker exec -it alertmanager-overview /bin/sh
+```
+
+With a local Node.js installation:
+
+```
+npm ci
+npm test
+npm run build
 ```

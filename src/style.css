@@ -36,3 +36,8 @@ li.alert > div.suppressed {
     color: black;
     background-color: #e0e0e0;
 }
+
+li.alert > div.unreachable {
+    color: black;
+    background-color: #FFA500;
+}
