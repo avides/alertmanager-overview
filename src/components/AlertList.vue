@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { type Alert, type AlertCounts, alertLevel, countAlerts, fetchAlerts, sortAlerts } from '../alerts';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { type Alert, type AlertCounts, alertLevel, countAlerts, fetchAlerts, sortAlerts, UNREACHABLE } from '../alerts';
 import { newSilenceUrl, prometheusUrl, silenceUrl } from '../links';
+import { alertSilence, fetchSilences, type Silence } from '../silences';
+import { formatDuration, formatTime } from '../time';
 import LevelIcon from './LevelIcon.vue';
 
 const props = withDefaults(defineProps<{
@@ -16,18 +18,33 @@ const emit = defineEmits<{
 }>();
 
 const alerts = ref<Alert[]>([]);
+const silences = ref(new Map<string, Silence>());
 const unreachable = ref(false);
+const now = ref(new Date());
 let timer: number | undefined;
+
+const rows = computed(() => alerts.value.map(alert => ({ alert, silence: alertSilence(alert, silences.value) })));
 
 async function update(): Promise<void> {
   try {
-    alerts.value = sortAlerts(await fetchAlerts(props.url));
+    // Without silences the alerts are shown anyway, only without the details of their silence
+    const [loadedAlerts, loadedSilences] = await Promise.all([
+      fetchAlerts(props.url),
+      fetchSilences(props.url).catch((error: unknown) => {
+        console.error(`Loading silences from ${props.url} failed`, error);
+        return new Map<string, Silence>();
+      })
+    ]);
+    alerts.value = sortAlerts(loadedAlerts);
+    silences.value = loadedSilences;
     unreachable.value = false;
     emit('counts', countAlerts(alerts.value));
   } catch (error) {
     console.error(`Loading alerts from ${props.url} failed`, error);
     unreachable.value = true;
+    emit('counts', UNREACHABLE);
   }
+  now.value = new Date();
 }
 
 onMounted(() => {
@@ -46,10 +63,16 @@ onBeforeUnmount(() => window.clearInterval(timer));
     <li v-else-if="!alerts.length" class="alert">
       <div class="no-alert"><span>No alerts</span></div>
     </li>
-    <li v-for="alert in alerts" :key="alert.fingerprint" class="alert">
+    <li v-for="{ alert, silence } in rows" :key="alert.fingerprint" class="alert">
       <div :class="alert.status.state">
         <LevelIcon :level="alertLevel(alert)" :description="alert.annotations.description" />
         <span class="summary">{{ alert.annotations.summary }}</span>
+        <span v-if="silence" class="meta" :title="silence.comment">
+          until {{ formatTime(new Date(silence.endsAt), now) }} · {{ silence.createdBy }}
+        </span>
+        <span class="meta duration" :title="`Since ${new Date(alert.startsAt).toLocaleString()}`">
+          {{ formatDuration(now.getTime() - Date.parse(alert.startsAt)) }}
+        </span>
         <a v-if="alert.status.state === 'active'" class="action" :href="newSilenceUrl(url, alert)"
           target="_blank" rel="noopener" title="Create silence">
           <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -57,7 +80,8 @@ onBeforeUnmount(() => window.clearInterval(timer));
             <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
         </a>
-        <a v-else-if="silenceUrl(url, alert)" class="action" :href="silenceUrl(url, alert)"
+        <a v-else-if="alert.status.silencedBy.length" class="action"
+          :href="silenceUrl(url, silence?.id ?? alert.status.silencedBy[0])"
           target="_blank" rel="noopener" title="Show silence">
           <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
             <path d="M8 1.5a4 4 0 0 0-4 4v3L2.5 11h11L12 8.5v-3a4 4 0 0 0-4-4zM6.5 12.5a1.5 1.5 0 0 0 3 0" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />

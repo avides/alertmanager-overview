@@ -21,10 +21,8 @@ export function newSilenceUrl(alertmanagerUrl: string, alert: Alert): string {
   return `${baseUrl(alertmanagerUrl)}/#/silences/new?filter=${encodeURIComponent(labelFilter(alert.labels))}`;
 }
 
-// The first silence that suppresses the alert, undefined if it is not silenced (e.g. only inhibited)
-export function silenceUrl(alertmanagerUrl: string, alert: Alert): string | undefined {
-  const silenceId = alert.status.silencedBy?.[0];
-  return silenceId ? `${baseUrl(alertmanagerUrl)}/#/silences/${encodeURIComponent(silenceId)}` : undefined;
+export function silenceUrl(alertmanagerUrl: string, silenceId: string): string {
+  return `${baseUrl(alertmanagerUrl)}/#/silences/${encodeURIComponent(silenceId)}`;
 }
 
 // The graph of the alert rule in Prometheus, only http(s) links are used

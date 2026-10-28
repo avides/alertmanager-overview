@@ -9,6 +9,7 @@ export interface Alert {
   labels: Record<string, string>;
   annotations: Record<string, string>;
   generatorURL?: string;
+  startsAt: string;
   status: {
     state: AlertState;
     silencedBy: string[];
@@ -20,6 +21,7 @@ export interface AlertCounts {
   suppressed: number;
   activeFatal: number;
   activeError: number;
+  unreachable: boolean;
 }
 
 export async function fetchAlerts(url: string): Promise<Alert[]> {
@@ -56,8 +58,11 @@ export function countAlerts(alerts: Alert[]): AlertCounts {
     active: active.length,
     suppressed: alerts.filter(alert => alert.status.state === 'suppressed').length,
     activeFatal: active.filter(alert => alertLevel(alert) === 'fatal').length,
-    activeError: active.filter(alert => alertLevel(alert) === 'error').length
+    activeError: active.filter(alert => alertLevel(alert) === 'error').length,
+    unreachable: false
   };
 }
 
-export const NO_ALERTS: AlertCounts = { active: 0, suppressed: 0, activeFatal: 0, activeError: 0 };
+export const NO_ALERTS: AlertCounts = { active: 0, suppressed: 0, activeFatal: 0, activeError: 0, unreachable: false };
+
+export const UNREACHABLE: AlertCounts = { ...NO_ALERTS, unreachable: true };

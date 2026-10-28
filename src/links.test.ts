@@ -7,6 +7,7 @@ function alert(overrides: Partial<Alert> = {}): Alert {
     fingerprint: 'f1',
     labels: { alertname: 'HostDown', instance: 'host01' },
     annotations: {},
+    startsAt: '2026-10-28T10:00:00Z',
     status: { state: 'active', silencedBy: [] },
     ...overrides
   };
@@ -31,14 +32,8 @@ describe('newSilenceUrl', () => {
 });
 
 describe('silenceUrl', () => {
-  it('links the first silence of the alert', () => {
-    const silenced = alert({ status: { state: 'suppressed', silencedBy: ['id-1', 'id-2'] } });
-
-    expect(silenceUrl('http://alertmanager.example.com', silenced)).toBe('http://alertmanager.example.com/#/silences/id-1');
-  });
-
-  it('is undefined without silence', () => {
-    expect(silenceUrl('http://alertmanager.example.com', alert())).toBeUndefined();
+  it('links the silence in the Alertmanager UI', () => {
+    expect(silenceUrl('http://alertmanager.example.com/', 'id-1')).toBe('http://alertmanager.example.com/#/silences/id-1');
   });
 });
 

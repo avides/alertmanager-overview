@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Alert, type AlertState, alertLevel, countAlerts, fetchAlerts, sortAlerts } from './alerts';
 
 function alert(fingerprint: string, state: AlertState, summary = fingerprint): Alert {
-  return { fingerprint, labels: {}, annotations: { summary }, status: { state, silencedBy: [] } };
+  return { fingerprint, labels: {}, annotations: { summary }, startsAt: '2026-10-28T10:00:00Z', status: { state, silencedBy: [] } };
 }
 
 describe('sortAlerts', () => {
@@ -37,7 +37,7 @@ describe('sortAlerts', () => {
   });
 
   it('sorts alerts without summary first', () => {
-    const withoutSummary: Alert = { fingerprint: 'n1', labels: {}, annotations: {}, status: { state: 'suppressed', silencedBy: [] } };
+    const withoutSummary: Alert = { ...alert('n1', 'suppressed'), annotations: {} };
 
     const sorted = sortAlerts([alert('s1', 'suppressed', 'Disk full'), withoutSummary]);
 
@@ -78,7 +78,7 @@ describe('countAlerts', () => {
       alert('u1', 'unprocessed')
     ]);
 
-    expect(counts).toEqual({ active: 4, suppressed: 1, activeFatal: 1, activeError: 2 });
+    expect(counts).toEqual({ active: 4, suppressed: 1, activeFatal: 1, activeError: 2, unreachable: false });
   });
 });
 

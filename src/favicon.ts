@@ -2,7 +2,7 @@ import type { AlertCounts } from './alerts';
 
 export interface FaviconEntry {
   color: string;
-  number: number;
+  text: string;
 }
 
 export type FaviconAlarm = 'fatal' | 'error' | undefined;
@@ -12,13 +12,16 @@ const BLINK_INTERVAL = 700;
 let blinkTimer: number | undefined;
 
 export function faviconEntry(counts: AlertCounts): FaviconEntry {
+  if (counts.unreachable) {
+    return { color: '#ffa500', text: '?' };
+  }
   if (counts.active > 0) {
-    return { color: '#ff0000', number: counts.active };
+    return { color: '#ff0000', text: String(counts.active) };
   }
   if (counts.suppressed > 0) {
-    return { color: '#888888', number: counts.suppressed };
+    return { color: '#888888', text: String(counts.suppressed) };
   }
-  return { color: '#00ff00', number: 0 };
+  return { color: '#00ff00', text: '0' };
 }
 
 // Active fatal or error alerts turn the whole favicon into an alarm
@@ -50,7 +53,7 @@ function drawFavicon(rows: AlertCounts[], background: string | undefined): void 
   rows.forEach((counts, index) => {
     const entry = faviconEntry(counts);
     ctx.fillStyle = background ? '#ffffff' : entry.color;
-    ctx.fillText(String(entry.number), 1, (index + 1) * 8 - 1);
+    ctx.fillText(entry.text, 1, (index + 1) * 8 - 1);
   });
 
   let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');

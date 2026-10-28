@@ -1,18 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { NO_ALERTS } from './alerts';
+import { NO_ALERTS, UNREACHABLE } from './alerts';
 import { faviconAlarm, faviconEntry } from './favicon';
 
 describe('faviconEntry', () => {
   it('shows active alerts in red', () => {
-    expect(faviconEntry({ ...NO_ALERTS, active: 2, suppressed: 3 })).toEqual({ color: '#ff0000', number: 2 });
+    expect(faviconEntry({ ...NO_ALERTS, active: 2, suppressed: 3 })).toEqual({ color: '#ff0000', text: '2' });
   });
 
   it('shows suppressed alerts in grey if no alert is active', () => {
-    expect(faviconEntry({ ...NO_ALERTS, suppressed: 3 })).toEqual({ color: '#888888', number: 3 });
+    expect(faviconEntry({ ...NO_ALERTS, suppressed: 3 })).toEqual({ color: '#888888', text: '3' });
+  });
+
+  it('shows an orange question mark for an unreachable Alertmanager', () => {
+    expect(faviconEntry(UNREACHABLE)).toEqual({ color: '#ffa500', text: '?' });
   });
 
   it('shows a green zero without alerts', () => {
-    expect(faviconEntry(NO_ALERTS)).toEqual({ color: '#00ff00', number: 0 });
+    expect(faviconEntry(NO_ALERTS)).toEqual({ color: '#00ff00', text: '0' });
   });
 });
 
