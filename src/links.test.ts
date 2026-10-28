@@ -53,4 +53,9 @@ describe('prometheusUrl', () => {
     expect(prometheusUrl(alert())).toBeUndefined();
     expect(prometheusUrl(alert({ generatorURL: 'javascript:alert(1)' }))).toBeUndefined();
   });
+
+  it('ignores invalid urls', () => {
+    expect(prometheusUrl(alert({ generatorURL: 'http://prometheus.example.com:65536/graph' }))).toBeUndefined();
+    expect(prometheusUrl(alert({ generatorURL: 'http://' }))).toBeUndefined();
+  });
 });

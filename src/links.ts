@@ -31,10 +31,13 @@ export function silenceUrl(alertmanagerUrl: string, silenceId: string): string {
 
 // The graph of the alert rule in Prometheus, only http(s) links are used
 export function prometheusUrl(alert: Alert): string | undefined {
-  if (!/^https?:\/\//.test(alert.generatorURL ?? '')) {
+  if (!alert.generatorURL || !URL.canParse(alert.generatorURL)) {
     return undefined;
   }
-  const url = new URL(alert.generatorURL!);
+  const url = new URL(alert.generatorURL);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return undefined;
+  }
   // Prometheus links to the table, 0 opens the graph tab (old and new Prometheus UI)
   url.searchParams.set('g0.tab', '0');
   url.searchParams.set('g0.range_input', PROMETHEUS_GRAPH_RANGE);
