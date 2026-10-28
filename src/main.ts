@@ -8,5 +8,7 @@ try {
   createApp(App, { ...config }).mount('#app');
 } catch (error) {
   console.error(error);
-  document.getElementById('app')!.textContent = String(error);
+  const app = document.getElementById('app')!;
+  app.className = 'dark-theme-title';
+  app.textContent = String(error);
 }

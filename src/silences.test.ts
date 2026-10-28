@@ -26,16 +26,16 @@ describe('fetchSilences', () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(silences)));
     vi.stubGlobal('fetch', fetchMock);
 
-    const loaded = await fetchSilences('http://alertmanager.example.com');
+    const loaded = await fetchSilences('http://alertmanager.example.com', 1000);
 
-    expect(fetchMock).toHaveBeenCalledWith('http://alertmanager.example.com/api/v2/silences');
+    expect(fetchMock).toHaveBeenCalledWith('http://alertmanager.example.com/api/v2/silences', { signal: expect.any(AbortSignal) });
     expect([...loaded.keys()]).toEqual(['s1']);
   });
 
   it('fails on an http error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })));
 
-    await expect(fetchSilences('http://alertmanager.example.com')).rejects.toThrow('HTTP 503');
+    await expect(fetchSilences('http://alertmanager.example.com', 1000)).rejects.toThrow('HTTP 503');
   });
 });
 

@@ -25,18 +25,19 @@ let timer: number | undefined;
 
 const rows = computed(() => alerts.value.map(alert => ({ alert, silence: alertSilence(alert, silences.value) })));
 
-async function update(): Promise<void> {
+// The silences only add details, so they are loaded independently and a slow request does not delay the alerts
+async function updateSilences(): Promise<void> {
   try {
-    // Without silences the alerts are shown anyway, only without the details of their silence
-    const [loadedAlerts, loadedSilences] = await Promise.all([
-      fetchAlerts(props.url),
-      fetchSilences(props.url).catch((error: unknown) => {
-        console.error(`Loading silences from ${props.url} failed`, error);
-        return new Map<string, Silence>();
-      })
-    ]);
-    alerts.value = sortAlerts(loadedAlerts);
-    silences.value = loadedSilences;
+    silences.value = await fetchSilences(props.url, props.refresh);
+  } catch (error) {
+    console.error(`Loading silences from ${props.url} failed`, error);
+  }
+}
+
+async function update(): Promise<void> {
+  void updateSilences();
+  try {
+    alerts.value = sortAlerts(await fetchAlerts(props.url, props.refresh));
     unreachable.value = false;
     emit('counts', countAlerts(alerts.value));
   } catch (error) {

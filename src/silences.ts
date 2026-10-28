@@ -11,8 +11,8 @@ export interface Silence {
   };
 }
 
-export async function fetchSilences(url: string): Promise<Map<string, Silence>> {
-  const response = await fetch(`${url}/api/v2/silences`);
+export async function fetchSilences(url: string, timeout: number): Promise<Map<string, Silence>> {
+  const response = await fetch(`${url}/api/v2/silences`, { signal: AbortSignal.timeout(timeout) });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }

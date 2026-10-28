@@ -24,8 +24,8 @@ export interface AlertCounts {
   unreachable: boolean;
 }
 
-export async function fetchAlerts(url: string): Promise<Alert[]> {
-  const response = await fetch(`${url}/api/v2/alerts`);
+export async function fetchAlerts(url: string, timeout: number): Promise<Alert[]> {
+  const response = await fetch(`${url}/api/v2/alerts`, { signal: AbortSignal.timeout(timeout) });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
