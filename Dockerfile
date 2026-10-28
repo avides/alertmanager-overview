@@ -1,4 +1,5 @@
-FROM node:24-alpine AS build
+# The build result is static files, so the build stage always runs on the platform of the build host
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 
 WORKDIR /app
 

@@ -29,7 +29,7 @@ avides/alertmanager-overview:latest
 
 ### Build & Test
 
-The application is written in TypeScript with Vue 3 and built with Vite. The Docker build runs the tests and the build, so only Docker is needed:
+The image is published for `linux/amd64` and `linux/arm64` (`.github/docker.platforms`). The application is written in TypeScript with Vue 3 and built with Vite. The Docker build runs the tests and the build, so only Docker is needed:
 
 ```
 docker build -t alertmanager-overview-dev .
