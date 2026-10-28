@@ -26,10 +26,17 @@ export async function fetchAlerts(url: string): Promise<Alert[]> {
   return (await response.json()) as Alert[];
 }
 
-// Active alerts first, then alphabetically by summary
+// Alerts without a known level are sorted after all levels
+function levelRank(alert: Alert): number {
+  const level = alertLevel(alert);
+  return level ? ALERT_LEVELS.indexOf(level) : ALERT_LEVELS.length;
+}
+
+// Active alerts first, then by level from fatal to info, then alphabetically by summary
 export function sortAlerts(alerts: Alert[]): Alert[] {
   return [...alerts].sort((x, y) =>
     Number(y.status.state === 'active') - Number(x.status.state === 'active')
+    || levelRank(x) - levelRank(y)
     || (x.annotations.summary ?? '').localeCompare(y.annotations.summary ?? ''));
 }
 

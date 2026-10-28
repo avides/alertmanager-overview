@@ -18,6 +18,24 @@ describe('sortAlerts', () => {
     expect(sorted.map(a => a.fingerprint)).toEqual(['a2', 'a1', 's2', 'u1', 's1']);
   });
 
+  it('sorts by level from fatal to info before the summary, unknown levels last', () => {
+    const withLevel = (fingerprint: string, state: AlertState, level: string): Alert =>
+      ({ ...alert(fingerprint, state, 'Same summary'), labels: { level } });
+
+    const sorted = sortAlerts([
+      withLevel('s-info', 'suppressed', 'info'),
+      withLevel('a-unknown', 'active', 'critical'),
+      withLevel('a-warn', 'active', 'warn'),
+      withLevel('s-fatal', 'suppressed', 'fatal'),
+      withLevel('a-fatal', 'active', 'fatal'),
+      withLevel('a-error', 'active', 'error'),
+      withLevel('a-info', 'active', 'info')
+    ]);
+
+    expect(sorted.map(a => a.fingerprint))
+      .toEqual(['a-fatal', 'a-error', 'a-warn', 'a-info', 'a-unknown', 's-fatal', 's-info']);
+  });
+
   it('sorts alerts without summary first', () => {
     const withoutSummary: Alert = { fingerprint: 'n1', labels: {}, annotations: {}, status: { state: 'suppressed' } };
 
