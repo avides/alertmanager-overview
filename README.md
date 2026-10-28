@@ -9,8 +9,8 @@ The current version of Alertmanager-Overview is designed for two Alertmanagers r
 ## Requirements
 
 - Docker
-- Alertmanager for production environment
-- Alertmanager for test environment
+- Alertmanager (0.16 or newer, API v2) for production environment
+- Alertmanager (0.16 or newer, API v2) for test environment
 
 ## Usage
 

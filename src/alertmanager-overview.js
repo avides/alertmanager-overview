@@ -1,5 +1,7 @@
 window.onload = function () {
-  Vue.component('alerts', {
+  var app = Vue.createApp({});
+
+  app.component('alerts', {
     props: {
       url: {
         type: String,
@@ -84,7 +86,5 @@ window.onload = function () {
       '</div>'
   });
 
-  new Vue({
-    el: '#app'
-  });
+  app.mount('#app');
 }
