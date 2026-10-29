@@ -3,8 +3,9 @@ export interface SummaryPart {
   number: boolean;
 }
 
-// Numbers standing on their own without their unit, e.g. "95" in "95%", "1.5" or "500" in "500ms", but not the digits in "host01" or "v1.2"
-const NUMBER = /(?<![\p{L}\d_.-])\d+(?:[.,]\d+)*/gu;
+// Numbers standing on their own without their unit, e.g. "95" in "95%", "-12.5" in "-12.5ms" or "1,500", but not
+// the digits in "host01", "host-01", "v1.2" or "1.2.3": either thousands groups or at most one decimal separator
+const NUMBER = /(?<![\p{L}\d_.-])-?(?:\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(?![.,]?\d)/gu;
 
 // Splits the summary so the numbers, usually the values filled in by the alert rule, can be highlighted
 export function splitNumbers(summary: string): SummaryPart[] {

@@ -18,8 +18,18 @@ describe('splitNumbers', () => {
     expect(numbers('Load 1.5, latency 500ms, 3,2 GB free')).toEqual(['1.5', '500', '3,2']);
   });
 
-  it('ignores digits within words and versions', () => {
-    expect(numbers('host01 runs v1.2 and node_2')).toEqual([]);
+  it('keeps thousands separators and negative numbers', () => {
+    expect(numbers('Queue has 1,500 messages, 1.234.567 bytes')).toEqual(['1,500', '1.234.567']);
+    expect(numbers('Temperature -5°C, offset -12.5ms')).toEqual(['-5', '-12.5']);
+  });
+
+  it('ignores digits within words, versions and addresses', () => {
+    expect(numbers('host01 and host-01 run v1.2 and node_2')).toEqual([]);
+    expect(numbers('Version 1.2.3 on 10.0.0.1')).toEqual([]);
+  });
+
+  it('ends a number before the end of a sentence', () => {
+    expect(numbers('Disk usage at 95.')).toEqual(['95']);
   });
 
   it('returns the summary as one part without numbers', () => {
