@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatTime } from './time';
+import { formatDateTime, formatDuration, formatTime } from './time';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -36,5 +36,12 @@ describe('formatTime', () => {
 
   it('shows the year for another year', () => {
     expect(formatTime(new Date(2043, 6, 19, 21, 23), now, 'de-DE')).toBe('19.07.2043 21:23');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('shows the date and time in the format of the locale', () => {
+    expect(formatDateTime(new Date(2026, 9, 28, 14, 5), 'de-DE')).toBe('28.10.2026, 14:05');
+    expect(formatDateTime(new Date(2026, 9, 28, 14, 5), 'en-US')).toBe('Oct 28, 2026, 2:05 PM');
   });
 });

@@ -31,6 +31,18 @@ describe('AlertList', () => {
     wrapper.unmount();
   });
 
+  it('shows the numbers of the summary in bold', async () => {
+    const alert = { ...ALERT, annotations: { summary: 'Disk at 95% on host01' } };
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(url.endsWith('/api/v2/silences') ? [] : [alert])))));
+
+    const wrapper = mount(AlertList, { props: { url: 'http://alertmanager.example.com' } });
+    await flushPromises();
+
+    expect(wrapper.find('.summary').text()).toBe('Disk at 95% on host01');
+    expect(wrapper.findAll('.summary strong').map(strong => strong.text())).toEqual(['95']);
+    wrapper.unmount();
+  });
+
   it('shows an unreachable Alertmanager', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
