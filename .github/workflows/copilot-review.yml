@@ -39,8 +39,8 @@ jobs:
           AUTOUPDATE_USER: avides-builds
         run: |
           # Prints the commits whose Copilot review applies to the head, newest first: the head and, as long as the newer commit
-          # is a configuration autoupdate commit (by the autoupdate user and only changing workflows), the commit before it -
-          # the autoupdate changes nothing in the project, so a review of the commit before it still counts
+          # is a configuration autoupdate commit (pushed by the autoupdate user and only changing workflows), the commit before
+          # it - the autoupdate changes nothing in the project, so a review of the commit before it still counts
           accepted_commits() {
             local HEAD=$1 COMMITS SHA LOGIN ONLY_WORKFLOWS
             COMMITS=$(gh api --paginate "repos/$REPOSITORY/pulls/$PULL_REQUEST/commits" \
@@ -53,6 +53,11 @@ jobs:
             while read -r SHA LOGIN; do
               echo "$SHA"
               [ "$LOGIN" = "$AUTOUPDATE_USER" ] || return 0
+              # The commit author can be set freely, the push is proven by a workflow run of the pull request triggered by the
+              # autoupdate user - its token is a secret
+              PUSHED=$(gh api "repos/$REPOSITORY/actions/runs?head_sha=$SHA&event=pull_request&actor=$AUTOUPDATE_USER" \
+                --jq '.total_count') || return 1
+              [ "$PUSHED" -gt 0 ] || return 0
               # The files are compared with the only parent, so merge commits never count - renames are checked with their source
               # path, a commit with 300 or more files may be truncated and never counts
               ONLY_WORKFLOWS=$(gh api "repos/$REPOSITORY/commits/$SHA" \
@@ -71,12 +76,12 @@ jobs:
           CREATED_AT=$(gh api "repos/$REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq '.created_at')
           STARTED_AFTER=$(date -u -d "@$(( $(date -u -d "$CREATED_AT" +%s) - 10 ))" +%Y-%m-%dT%H:%M:%SZ)
 
-          # Prints the Copilot review runs of the accepted commits as "<status> <started_at>" - every requested review runs as
-          # check run of the commit that was the head when the review started
+          # Prints the Copilot review runs of the accepted commits as "<status> <started_at> <conclusion>" - every requested
+          # review runs as check run of the commit that was the head when the review started
           copilot_runs() {
             for SHA in $ACCEPTED; do
               gh api --paginate "repos/$REPOSITORY/commits/$SHA/check-runs" \
-                --jq '.check_runs[] | select(.name == "copilot-pull-request-reviewer") | "\(.status) \(.started_at)"'
+                --jq '.check_runs[] | select(.name == "copilot-pull-request-reviewer") | "\(.status) \(.started_at) \(.conclusion)"'
             done
           }
 
@@ -91,6 +96,8 @@ jobs:
               sleep 20
               CURRENT_SHA=$(gh api "repos/$REPOSITORY/pulls/$PULL_REQUEST" --jq '.head.sha')
               if [ "$CURRENT_SHA" != "$HEAD_SHA" ]; then
+                # The workflow runs proving the push of an autoupdate commit are created a few seconds after the push
+                sleep 10
                 CURRENT_ACCEPTED=$(accepted_commits "$CURRENT_SHA")
                 if ! grep -qx "$HEAD_SHA" <<< "$CURRENT_ACCEPTED"; then
                   echo "::error::A new commit was pushed while waiting for the Copilot review of ${HEAD_SHA:0:7}. Request a Copilot review again."
@@ -116,9 +123,20 @@ jobs:
           # Only reviews of an accepted commit containing the Copilot overview count - if Copilot could not review (e.g. quota
           # limit reached), it still posts a review, but without the overview
           ACCEPTED_JSON="[$(printf '"%s",' $ACCEPTED | sed 's/,$//')]"
-          REVIEWED_SHA=$(gh api --paginate "repos/$REPOSITORY/pulls/$PULL_REQUEST/reviews" \
-            --jq ".[] | select(.user.login == \"copilot-pull-request-reviewer[bot]\" and (.commit_id as \$sha | $ACCEPTED_JSON | index(\$sha) != null) and (.body | contains(\"<!-- ccr-overview\"))) | .commit_id" \
-            | tail -n 1)
+          reviewed_sha() {
+            gh api --paginate "repos/$REPOSITORY/pulls/$PULL_REQUEST/reviews" \
+              --jq ".[] | select(.user.login == \"copilot-pull-request-reviewer[bot]\" and (.commit_id as \$sha | $ACCEPTED_JSON | index(\$sha) != null) and (.body | contains(\"<!-- ccr-overview\"))) | .commit_id" \
+              | tail -n 1
+          }
+          REVIEWED_SHA=$(reviewed_sha)
+
+          # Copilot posts its review a few seconds after its review run is completed, so after a successful review run the
+          # review is awaited for up to a minute
+          for _ in 1 2 3 4 5 6; do
+            [ -z "$REVIEWED_SHA" ] && grep -q ' success$' <<< "$(copilot_runs)" || break
+            sleep 10
+            REVIEWED_SHA=$(reviewed_sha)
+          done
 
           if [ -z "$REVIEWED_SHA" ]; then
             echo "::error::Copilot has not reviewed the latest commit ${HEAD_SHA:0:7} yet. Request a Copilot review on the pull request after your last push, this check waits for it."

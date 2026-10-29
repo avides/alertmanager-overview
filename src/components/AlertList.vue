@@ -3,7 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { type Alert, type AlertCounts, alertLevel, countAlerts, fetchAlerts, sortAlerts, UNREACHABLE } from '../alerts';
 import { newSilenceUrl, prometheusUrl, silenceUrl } from '../links';
 import { alertSilence, fetchSilences, type Silence } from '../silences';
-import { formatDuration, formatTime } from '../time';
+import { splitNumbers } from '../summary';
+import { formatDateTime, formatDuration, formatTime } from '../time';
 import LevelIcon from './LevelIcon.vue';
 
 const props = withDefaults(defineProps<{
@@ -67,12 +68,17 @@ onBeforeUnmount(() => window.clearInterval(timer));
     <li v-for="{ alert, silence } in rows" :key="alert.fingerprint" class="alert">
       <div :class="alert.status.state">
         <LevelIcon :level="alertLevel(alert)" :description="alert.annotations.description" />
-        <span class="summary">{{ alert.annotations.summary }}</span>
+        <span class="summary">
+          <template v-for="(part, index) in splitNumbers(alert.annotations.summary ?? '')" :key="index">
+            <strong v-if="part.number">{{ part.text }}</strong>
+            <template v-else>{{ part.text }}</template>
+          </template>
+        </span>
         <span class="meta silence-end" :title="silence?.comment">
           <template v-if="silence">until {{ formatTime(new Date(silence.endsAt), now) }}</template>
         </span>
         <span class="meta silence-creator" :title="silence?.comment">{{ silence?.createdBy }}</span>
-        <span class="meta duration" :title="`Since ${new Date(alert.startsAt).toLocaleString()}`">
+        <span class="meta duration" :title="`Since ${formatDateTime(new Date(alert.startsAt))}`">
           {{ formatDuration(now.getTime() - Date.parse(alert.startsAt)) }}
         </span>
         <a v-if="alert.status.state === 'active'" class="action" :href="newSilenceUrl(url, alert)"
