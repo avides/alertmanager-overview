@@ -20,6 +20,7 @@ describe('splitNumbers', () => {
 
   it('keeps thousands separators and negative numbers', () => {
     expect(numbers('Queue has 1,500 messages, 1.234.567 bytes')).toEqual(['1,500', '1.234.567']);
+    expect(numbers('Balance 1,500.25 and 1.500,25')).toEqual(['1,500.25', '1.500,25']);
     expect(numbers('Temperature -5°C, offset -12.5ms')).toEqual(['-5', '-12.5']);
   });
 
@@ -29,7 +30,7 @@ describe('splitNumbers', () => {
 
   it('ignores digits within words, versions and addresses', () => {
     expect(numbers('host01 and host-01 run v1.2 and node_2')).toEqual([]);
-    expect(numbers('Version 1.2.3 on 10.0.0.1')).toEqual([]);
+    expect(numbers('Version 1.2.3 on 10.0.0.1 and 192.168.100.1')).toEqual([]);
   });
 
   it('ends a number before the end of a sentence', () => {
