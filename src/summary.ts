@@ -3,9 +3,10 @@ export interface SummaryPart {
   number: boolean;
 }
 
-// Numbers standing on their own without their unit, e.g. "95" in "95%", "-12.5" in "-12.5ms" or "1,500", but not
-// the digits in "host01", "host-01", "v1.2" or "1.2.3": either thousands groups or at most one decimal separator
-const NUMBER = /(?<![\p{L}\d_.-])-?(?:\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(?![.,]?\d)/gu;
+// Numbers standing on their own without their unit, e.g. "95" in "95%", "-12.5" in "-12.5ms", "1,500" or "1e+06" as
+// Prometheus renders large values, but not the digits in "host01", "host-01", "v1.2" or "1.2.3": either thousands
+// groups or at most one decimal separator, optionally with an exponent
+const NUMBER = /(?<![\p{L}\d_.-])-?(?:\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(?:e[+-]?\d+)?(?![.,]?\d)/giu;
 
 // Splits the summary so the numbers, usually the values filled in by the alert rule, can be highlighted
 export function splitNumbers(summary: string): SummaryPart[] {

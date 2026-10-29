@@ -23,6 +23,10 @@ describe('splitNumbers', () => {
     expect(numbers('Temperature -5°C, offset -12.5ms')).toEqual(['-5', '-12.5']);
   });
 
+  it('keeps the exponent of the scientific notation', () => {
+    expect(numbers('Value 1e+06, latency 1.25e-03s, rate 2E5')).toEqual(['1e+06', '1.25e-03', '2E5']);
+  });
+
   it('ignores digits within words, versions and addresses', () => {
     expect(numbers('host01 and host-01 run v1.2 and node_2')).toEqual([]);
     expect(numbers('Version 1.2.3 on 10.0.0.1')).toEqual([]);

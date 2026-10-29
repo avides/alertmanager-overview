@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatDateTime, formatDuration, formatTime } from './time';
 
 const MINUTE = 60 * 1000;
@@ -43,5 +43,22 @@ describe('formatDateTime', () => {
   it('shows the date and time in the format of the locale', () => {
     expect(formatDateTime(new Date(2026, 9, 28, 14, 5), 'de-DE')).toBe('28.10.2026, 14:05');
     expect(formatDateTime(new Date(2026, 9, 28, 14, 5), 'en-US')).toBe('Oct 28, 2026, 2:05 PM');
+  });
+});
+
+describe('user locales', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('uses the preferred languages of the browser by default', () => {
+    vi.stubGlobal('navigator', { languages: ['de-DE', 'en-US'] });
+    const now = new Date(2026, 9, 28, 12, 0);
+
+    expect(formatTime(new Date(2026, 9, 29, 21, 30), now)).toBe('29.10. 21:30');
+    expect(formatDateTime(new Date(2026, 9, 28, 14, 5))).toBe('28.10.2026, 14:05');
+
+    vi.stubGlobal('navigator', { languages: ['en-US'] });
+    expect(formatTime(new Date(2026, 9, 29, 21, 30), now)).toBe('10/29 09:30 PM');
   });
 });
